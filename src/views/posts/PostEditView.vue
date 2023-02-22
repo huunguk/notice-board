@@ -2,14 +2,24 @@
   <div>
     <h2>게시글 수정</h2>
     <hr class="my-4" />
-    <form @submit.prevent>
+    <form @submit.prevent="edit">
       <div class="mb-3">
         <label for="title" class="form-label">제목</label>
-        <input type="text" class="form-control" id="exampleFormControlInput1" />
+        <input
+          v-model="form.title"
+          type="text"
+          class="form-control"
+          id="exampleFormControlInput1"
+        />
       </div>
       <div class="mb-3">
         <label for="content" class="form-label">내용</label>
-        <textarea class="form-control" id="content" rows="3"></textarea>
+        <textarea
+          v-model="form.content"
+          class="form-control"
+          id="content"
+          rows="3"
+        ></textarea>
       </div>
       <div class="pt-4">
         <button
@@ -26,13 +36,43 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { getPostById, updatePost } from '@/api/posts.js';
 
 const route = useRoute();
 const id = route.params.id;
 const router = useRouter();
+
+const form = ref({
+  title: null,
+  content: null,
+});
+const fetchPost = async () => {
+  try {
+    const { data } = await getPostById(id);
+    setForm(data);
+  } catch (err) {
+    console.err(err);
+  }
+};
+const setForm = ({ title, content }) => {
+  form.value.title = title;
+  form.value.content = content;
+};
+fetchPost();
+
 const goDetailPage = () => {
   router.push({ name: 'PostDetail', params: { id } });
+};
+
+const edit = async () => {
+  try {
+    await updatePost(id, { ...form.value });
+    router.push({ name: 'PostDetail', params: { id } });
+  } catch (err) {
+    console.log(err);
+  }
 };
 </script>
 
