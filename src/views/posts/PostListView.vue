@@ -2,81 +2,58 @@
   <div>
     <h2>게시글 목록</h2>
     <hr class="my-4" />
-    <form @submit.prevent>
-      <div class="row g-3">
-        <div class="col">
-          <input v-model="params.title_like" type="text" class="form-control" />
-        </div>
-        <div class="col">
-          <select v-model="params._limit" class="form-select">
-            <option value="3">3개씩 보기</option>
-            <option value="6">6개씩 보기</option>
-            <option value="9">9개씩 보기</option>
-          </select>
-        </div>
-      </div>
-    </form>
+    <PostFilter
+      v-model:title="params.title_like"
+      v-model:limit="params.limit"
+    ></PostFilter>
     <hr class="my-4" />
-    <div class="row g-3">
-      <div v-for="post in posts" :key="post.id" class="col-4">
+    <AppGrid :items="posts">
+      <template v-slot="{ item }">
         <PostItem
-          :title="post.title"
-          :content="post.content"
-          :created-at="post.createdAt"
-          @click="goPage(post.id)"
+          :title="item.title"
+          :content="item.content"
+          :created-at="item.createdAt"
+          @click="goPage(item.id)"
         ></PostItem>
-      </div>
+      </template>
+    </AppGrid>
+    <div class="row g-3">
+      <div v-for="post in posts" :key="post.id" class="col-4"></div>
     </div>
-    <nav aria-label="Page navigation example" class="mt-5">
-      <ul class="pagination justify-content-center">
-        <li class="page-item" :class="{ disabled: !(params._page > 1) }">
-          <a
-            class="page-link"
-            href="#"
-            aria-label="Previous"
-            @click.prevent="--params._page"
-          >
-            <span aria-hidden="true">&laquo;</span>
-          </a>
-        </li>
-        <li
-          v-for="page in pageCount"
-          :key="page"
-          class="page-item"
-          :class="{ active: params._page === page }"
-        >
-          <a class="page-link" href="#" @click.prevent="params._page = page">{{
-            page
-          }}</a>
-        </li>
-        <li
-          class="page-item"
-          :class="{ disabled: !(params._page < pageCount) }"
-        >
-          <a
-            class="page-link"
-            href="#"
-            aria-label="Next"
-            @click.prevent="++params._page"
-          >
-            <span aria-hidden="true">&raquo;</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-    <hr class="my-5" />
-    <AppCard>
-      <PostDetailView :id="1"></PostDetailView>
-    </AppCard>
+    <AppPagination
+      :current-page="params._page"
+      :page-count="pageCount"
+      @page="page => (params._page = page)"
+    />
+    <AppModal
+      :show="show"
+      title="게시글"
+      @click="
+        {
+          OpenModal;
+        }
+      "
+    ></AppModal>
+    <template v-if="posts && posts.length > 0">
+      <hr class="my-5" />
+      <AppCard>
+        <PostDetailView :id="posts[0].id"></PostDetailView>
+      </AppCard>
+    </template>
   </div>
 </template>
 
 <script setup>
 import PostItem from '@/components/posts/PostItem.vue';
 import PostDetailView from '@/views/posts/PostDetailView.vue';
+import AppPagination from '@/components/AppPagination.vue';
+import PostFilter from '@/components/posts/PostFilter.vue';
+import AppGrid from '@/components/AppGrid.vue';
 import AppCard from '@/components/AppCard.vue';
 import { ref, computed, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
+import AppModal from '@/components/AppModal.vue';
+
 import { getPosts } from '@/api/posts.js';
 
 const posts = ref([]);
@@ -113,6 +90,9 @@ const goPage = id => {
     },
   });
 };
+
+const show = ref(false);
+const OpenModal = () => show.value.true;
 </script>
 
 <style lang="scss" scoped></style>
